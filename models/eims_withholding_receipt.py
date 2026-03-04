@@ -40,6 +40,8 @@ class EimsWithholdingReceipt(models.Model):
         [('draft', 'Draft'), ('verified', 'Verified'), ('submitted', 'Submitted'), ('error', 'Error')],
         default='draft', string="Status")
     eims_response = fields.Text(string="EIMS Response")
+    verification_response = fields.Text(string="Verification Response")
+    submission_response = fields.Text(string="Submission Response")
     create_date = fields.Datetime(string="Created On", readonly=True)
     verified_date = fields.Datetime(string="Verified On")
     submitted_date = fields.Datetime(string="Submitted On")
@@ -47,21 +49,59 @@ class EimsWithholdingReceipt(models.Model):
 
     partner_id = fields.Many2one('res.partner', string="Buyer")
     company_id = fields.Many2one('res.company', default=lambda self: self.env.company)
+    eims_buyers_city_code = fields.Char(string="Buyers City Code")
+    eims_buyers_region = fields.Char(string="Buyers Region")
+    eims_buyers_wereda = fields.Char(string="Buyers Wereda")
+    eims_buyers_locality = fields.Char(string="Buyers Locality")
+    eims_buyers_house_number = fields.Char(string="Buyers House Number")
+    eims_buyers_tin = fields.Char(string="Buyers TIN")
+    eims_buyers_vat_number = fields.Char(string="Buyers VAT Number")
+    eims_buyers_legal_name = fields.Char(string="Buyers Legal Name")
+    eims_buyers_phone = fields.Char(string="Buyers Phone")
+
+    eims_seller_tin = fields.Char(string="Seller TIN")
+    eims_seller_vat_number = fields.Char(string="Seller VAT Number")
+    eims_seller_legal_name = fields.Char(string="Seller Legal Name")
     eims_seller_city_code = fields.Char(string="Seller City Code")
+    eims_seller_region = fields.Char(string="Seller Region")
     eims_seller_wereda = fields.Char(string="Seller Woreda")
     eims_seller_locality = fields.Char(string="Seller Locality")
     eims_seller_house_number = fields.Char(string="Seller House Number")
-    eims_buyers_city_code = fields.Char(string="Buyers City Code")
-    eims_buyers_wereda = fields.Char(string="Buyers Woreda")
-    eims_buyers_tin = fields.Char(string="Buyers TIN")
-    eims_buyers_vat_number = fields.Char(string="Buyers VAT Number")
-    eims_seller_tin = fields.Char(string="Seller TIN")
-    eims_seller_vat_number = fields.Char(string="Seller VAT Number")
+    eims_seller_phone = fields.Char(string="Seller Phone")
     qr_code = fields.Text(string="QR Code")
     eims_qr_code = fields.Binary(string="EIMS QR Code")
     
     # Ethiopian Calendar Date (computed)
     ethiopian_date = fields.Char(string="Ethiopian Date", compute="_compute_ethiopian_date")
+
+    def _find_qr_recursive(self, data):
+        """Recursively search for common QR code keys in EIMS JSON response."""
+        if not data:
+            return None
+        
+        # Priority keys
+        priority_keys = ['signedQR', 'qrCode', 'qr', 'signed_qr', 'QR']
+        
+        if isinstance(data, dict):
+            # Check current level for priority keys
+            for k in priority_keys:
+                if data.get(k):
+                    return data.get(k)
+            
+            # Recurse into sub-dictionaries
+            for val in data.values():
+                res = self._find_qr_recursive(val)
+                if res:
+                    return res
+        
+        elif isinstance(data, list):
+            # Recurse into list items
+            for item in data:
+                res = self._find_qr_recursive(item)
+                if res:
+                    return res
+        
+        return None
 
     @api.depends('submitted_date', 'create_date')
     def _compute_ethiopian_date(self):
@@ -166,6 +206,90 @@ class EimsWithholdingReceipt(models.Model):
         raise UserError(_("Unable to obtain EIMS token. Check eims_auth helper."))
 
     # --- Button actions ---
+    def _populate_fields_from_eims_body(self, body):
+        """
+        Centralized method to populate withholding receipt fields from EIMS response body.
+        Truly case-insensitive and robust against minor schema variations.
+        """
+        if not body:
+            _logger.warning("[EIMS] _populate_fields_from_eims_body called with empty body")
+            return
+
+        # Case-insensitive nested dictionary extraction
+        def get_nested(d, key):
+            if not isinstance(d, dict):
+                return {}
+            lk = key.lower()
+            for k, v in d.items():
+                if k.lower() == lk and isinstance(v, dict):
+                    return v
+            return {}
+
+        # Case-insensitive value extraction with key aliases
+        def get_val(d, key_aliases):
+            if not isinstance(d, dict):
+                return ""
+            if isinstance(key_aliases, str):
+                key_aliases = [key_aliases]
+            
+            lower_aliases = [a.lower() for a in key_aliases]
+            # Priority 1: Exact or case-insensitive match for primary aliases
+            for k, v in d.items():
+                if k.lower() in lower_aliases:
+                    return str(v or "")
+                    
+            # Priority 2: Contains check (useful for "BuyerVatNumber" vs "VatNumber")
+            for k, v in d.items():
+                for alias in lower_aliases:
+                    if alias in k.lower():
+                        return str(v or "")
+            return ""
+
+        buyer_details = get_nested(body, "BuyerDetails")
+        seller_details = get_nested(body, "SellerDetails")
+        value_details = get_nested(body, "ValueDetails")
+
+        _logger.debug("[EIMS] Body Keys: %s", body.keys())
+
+        # Common aliases for VAT and TIN
+        vat_aliases = ["VatNumber", "VatRegNo", "VATNumber", "Vat_Number", "VatNo"]
+        tin_aliases = ["Tin", "TINNumber", "TIN", "TaxpayerId"]
+
+        # Buyer Details Extraction
+        self.eims_buyers_tin = get_val(buyer_details, tin_aliases) or get_val(body, ["BuyerTin", "BuyerTIN"])
+        self.eims_buyers_vat_number = get_val(buyer_details, vat_aliases) or get_val(body, ["BuyerVat", "BuyerVatNumber"])
+        self.eims_buyers_legal_name = get_val(buyer_details, "LegalName") or get_val(body, "BuyerName")
+        self.eims_buyers_phone = get_val(buyer_details, "Phone") or get_val(body, "BuyerPhone")
+        self.eims_buyers_city_code = get_val(buyer_details, "City")
+        self.eims_buyers_region = get_val(buyer_details, "Region")
+        self.eims_buyers_wereda = get_val(buyer_details, "Wereda")
+        self.eims_buyers_locality = get_val(buyer_details, "Locality")
+        self.eims_buyers_house_number = get_val(buyer_details, "HouseNumber")
+
+        # Seller Details Extraction
+        self.eims_seller_tin = get_val(seller_details, tin_aliases) or get_val(body, ["SellerTin", "SellerTIN"])
+        self.eims_seller_vat_number = get_val(seller_details, vat_aliases) or get_val(body, ["SellerVat", "SellerVatNumber"])
+        self.eims_seller_legal_name = get_val(seller_details, "LegalName") or get_val(body, "SellerName")
+        self.eims_seller_phone = get_val(seller_details, "Phone") or get_val(body, "SellerPhone")
+        self.eims_seller_city_code = get_val(seller_details, "City")
+        self.eims_seller_region = get_val(seller_details, "Region")
+        self.eims_seller_wereda = get_val(seller_details, "Wereda")
+        self.eims_seller_locality = get_val(seller_details, "Locality")
+        self.eims_seller_house_number = get_val(seller_details, "HouseNumber")
+        
+        _logger.info("[EIMS] IRN: %s | Extracted Buyer VAT: %s | Seller VAT: %s", 
+                     self.invoice_irn, self.eims_buyers_vat_number, self.eims_seller_vat_number)
+
+        # Value Details
+        self.withholding_amount = float(get_val(value_details, ["IncomeWithholdValue", "WithholdingAmount", "WithheldAmount"]) or 0.0)
+        
+        # compute pre_tax from returned ItemList sum (if present)
+        items = body.get('ItemList') or body.get('itemList') or []
+        pre_tax_sum = 0.0
+        for it in items:
+            pre_tax_sum += float(get_val(it, ["PreTaxValue", "Amount", "Value"]) or 0)
+        self.pre_tax_amount = pre_tax_sum
+
     def action_verify_irn(self):
         # Get the session from your helper
         http = self.env['eims.auth'].get_eims_http_session()
@@ -177,7 +301,7 @@ class EimsWithholdingReceipt(models.Model):
             token = self._get_token()
         except Exception as ex:
             self.status = 'error'
-            self.eims_response = json.dumps({"error": str(ex)})
+            self.verification_response = json.dumps({"error": str(ex)})
             _logger.error("EIMS token error: %s", ex)
             return False
 
@@ -191,33 +315,33 @@ class EimsWithholdingReceipt(models.Model):
             resp = http.post(url_verify, json=signed_payload, headers=headers, timeout=(5, 30))
             resp.raise_for_status()
             data = resp.json()
-            self.eims_response = json.dumps(data, default=str)
+            self.verification_response = json.dumps(data, default=str)
             if data.get('statusCode') == 200 or data.get('message') == 'SUCCESS':
                 body = data.get('body', {})
-                # populate useful fields
-                self.seller_tin = body.get('SellerDetails', {}).get('Tin')
-                self.seller_name = body.get('SellerDetails', {}).get('LegalName')
-                self.buyer_tin = body.get('BuyerDetails', {}).get('Tin')
+                # populate useful fields using centralized method
+                self._populate_fields_from_eims_body(body)
 
-                # --- NEW: map withholding amount from API response ---
-                value_details = body.get('ValueDetails') or {}
-                self.withholding_amount = float(value_details.get('IncomeWithholdValue') or 0.0)
-
-                # compute pre_tax from returned ItemList sum (if present)
-                items = body.get('ItemList') or []
-                pre_tax_sum = 0.0
-                for it in items:
-                    pre_tax_sum += float(it.get('PreTaxValue') or 0)
-                self.pre_tax_amount = pre_tax_sum
+                # Compatibility with existing fields if needed
+                self.seller_tin = self.eims_seller_tin
+                self.seller_name = self.eims_seller_legal_name
+                self.buyer_tin = self.eims_buyers_tin
+                
+                # Extract QR Code (Aggressive Recursive Search)
+                qr_val = self._find_qr_recursive(data)
+                self.qr_code = qr_val
+                self.eims_qr_code = qr_val if qr_val else False
+                
                 self.verified_date = fields.Datetime.now()
-                self.status = 'verified'
-                _logger.info("[EIMS] IRN verified: %s", self.invoice_irn)
+                # Preserve 'submitted' status if already set
+                if self.status != 'submitted':
+                    self.status = 'verified'
+                _logger.info("[EIMS] IRN verified: %s | QR found: %s", self.invoice_irn, bool(qr_val))
             else:
                 self.status = 'error'
                 _logger.warning("[EIMS] verify returned non-200: %s", data)
         except Exception as ex:
             self.status = 'error'
-            self.eims_response = str(ex)
+            self.verification_response = str(ex)
             _logger.exception("Error calling EIMS verify: %s", ex)
         return True
 
@@ -260,7 +384,7 @@ class EimsWithholdingReceipt(models.Model):
             token = self._get_token()
         except Exception as ex:
             self.status = 'error'
-            self.eims_response = json.dumps({"error": str(ex)})
+            self.submission_response = json.dumps({"error": str(ex)})
             _logger.error("EIMS token error: %s", ex)
             return False
 
@@ -299,16 +423,36 @@ class EimsWithholdingReceipt(models.Model):
             resp = http.post(url_submit, json=signed_payload, headers=headers, timeout=(5, 30))
             resp.raise_for_status()
             data = resp.json()
-            self.eims_response = json.dumps(data, default=str)
+            self.submission_response = json.dumps(data, default=str)
             # Expected success shape may vary
             if data.get('statusCode') in (200, 201) or data.get('message') in ('SUCCESS', 'Accepted'):
                 # try to get RRN from response
                 body = data.get('body') or {}
                 rrn = body.get('ReceiptNumber') or body.get('rrn') or body.get('ReceiptRef') or ''
                 self.rrn = rrn
+
+                # Populate buyer/seller details from submission body if available,
+                # otherwise fall back to re-applying the stored verification response
+                # so the report always shows complete information from the verification log.
+                if body.get('BuyerDetails') or body.get('SellerDetails'):
+                    self._populate_fields_from_eims_body(body)
+                elif self.verification_response:
+                    try:
+                        ver_data = json.loads(self.verification_response)
+                        ver_body = ver_data.get('body', {})
+                        if ver_body:
+                            self._populate_fields_from_eims_body(ver_body)
+                    except Exception as parse_err:
+                        _logger.warning("[EIMS] Could not re-apply verification data after submission: %s", parse_err)
+
+                # Extract QR Code (Aggressive Recursive Search)
+                qr_val = self._find_qr_recursive(data)
+                self.qr_code = qr_val
+                self.eims_qr_code = qr_val if qr_val else False
+
                 self.submitted_date = fields.Datetime.now()
                 self.status = 'submitted'
-                _logger.info("[EIMS] Withholding submitted for IRN %s -> RRN %s", self.invoice_irn, rrn)
+                _logger.info("[EIMS] Withholding submitted for IRN %s -> RRN %s | QR found: %s", self.invoice_irn, rrn, bool(qr_val))
 
                 # ----------------------------------------------------
                 # 📧 SEND EMAIL AFTER WITHHOLDING RECEIPT SUCCESS
@@ -324,7 +468,7 @@ class EimsWithholdingReceipt(models.Model):
                 _logger.warning("[EIMS] submit returned non-ok: %s", data)
         except Exception as ex:
             self.status = 'error'
-            self.eims_response = str(ex)
+            self.submission_response = str(ex)
             _logger.exception("Error submitting withholding to EIMS: %s", ex)
         return True
 

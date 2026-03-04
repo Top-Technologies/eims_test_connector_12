@@ -4,7 +4,7 @@
         <record id="action_report_eims_invoice_replica_v2" model="ir.actions.report">
             <field name="name">eims_test_connector_12.report_eims_invoice_document</field>
             <field name="model">eims.registered.invoice</field>
-            <field name="report_type">qweb-html</field>
+            <field name="report_type">qweb-pdf</field>
             <field name="report_name">eims_test_connector_12.report_eims_invoice_document</field>
             <field name="report_file">eims_test_connector_12.report_eims_invoice_document</field>
 
@@ -19,7 +19,7 @@
         <record id="action_report_eims_receipt" model="ir.actions.report">
             <field name="name">eims_test_connector_12.report_eims_receipt_document</field>
             <field name="model">eims.receipt.log</field>
-            <field name="report_type">qweb-html</field>
+            <field name="report_type">qweb-pdf</field>
             <field name="report_name">eims_test_connector_12.report_eims_receipt_document</field>
             <field name="report_file">eims_test_connector_12.report_eims_receipt_document</field>
 
@@ -33,7 +33,7 @@
         <record id="action_report_eims_wh_receipt" model="ir.actions.report">
             <field name="name">eims_test_connector_12.report_eims_wh_receipt_document</field>
             <field name="model">eims.withholding.receipt</field>
-            <field name="report_type">qweb-html</field>
+            <field name="report_type">qweb-pdf</field>
             <field name="report_name">eims_test_connector_12.report_eims_wh_receipt_document</field>
             <field name="report_file">eims_test_connector_12.report_eims_wh_receipt_document</field>
 

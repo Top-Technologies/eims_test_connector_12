@@ -75,7 +75,7 @@
                         <div class="row mt-3" style="border: 2px solid black;">
                             <!--  SELLER  -->
                             <div class="col-6" style="border-right: 1px solid black; padding: 6px;">
-                                <h6 style="font-weight: bold;">ከ / From Top System Solutions and Technology Plc</h6>
+                                <h6 style="font-weight: bold;">ከ / From <t t-esc="doc.eims_seller_legal_name or doc.partner_id.name"/></h6>
                                 <!--  Address Section  -->
                                 <p style="margin-bottom: 3px;">
                                     <strong>አድራሻ / Address:</strong>
@@ -84,43 +84,42 @@
                                     <div class="col-6">
                                         <p class="mb-1" style="font-size: 9pt;">
                                             <strong>ከተማ / City/Town :</strong>
-                                            <t t-esc="doc.company_id.partner_id.city or 'N/A'"/>
+                                            <t t-esc="doc.eims_seller_city_code or doc.partner_id.city or 'N/A'"/>
                                         </p>
                                         <p class="mb-1" style="font-size: 9pt;">
                                             <strong>ወረዳ / Woreda :</strong>
-                                            13
+                                            <t t-esc="doc.eims_seller_wereda or doc.partner_id.eims_wereda or 'N/A'"/>
                                         </p>
                                     </div>
                                     <div class="col-6">
                                         <p class="mb-1" style="font-size: 9pt;">
                                             <strong>ዞን / ክ/ከተማ / Zone/Sub city :</strong>
-                                            N/A
+                                            <t t-esc="doc.eims_seller_region or doc.partner_id.eims_region or doc.partner_id.state_id.name or 'N/A'"/>
                                         </p>
                                         <p class="mb-1" style="font-size: 9pt;">
                                             <strong>ቀበሌ / Kebele :</strong>
-                                            N/A
+                                            <t t-esc="doc.eims_seller_locality or 'N/A'"/>
                                         </p>
                                     </div>
                                 </div>
                                 <p class="mb-1" style="font-size: 9pt;">
                                     <strong>የቤ/ቁ / H/No :</strong>
-                                    N/A
+                                    <t t-esc="doc.eims_seller_house_number or doc.partner_id.eims_house_number or 'N/A'"/>
                                 </p>
                                 <!--  Phone  -->
                                 <p class="mb-1">
                                     <strong>Phone:</strong>
-                                    <t t-esc="doc.company_id.partner_id.phone or 'N/A'"/>
+                                    <t t-esc="doc.eims_seller_phone or doc.partner_id.phone or 'N/A'"/>
                                 </p>
                                 <!--  VAT and Sub-TIN  -->
                                 <p class="mb-1" style="font-size: 9pt;">
                                     <strong>የሻጭ ተ.እ.ታ ቁጥር / Seller's VAT Reg.No:</strong>
-                                    43256663343256663322
+                                    <t t-esc="doc.eims_seller_vat_number or doc.partner_id.eims_vat_number or doc.partner_id.vat or 'N/A'"/>
                                 </p>
                                 <p class="mb-1">
                                     <strong>የሻጭ የግብር ከፋይ መለያ ቁጥር / Seller's TIN:</strong>
-                                    <t t-esc="'0054835018'"/>
+                                    <t t-esc="doc.eims_seller_tin or doc.partner_id.eims_tin or 'N/A'"/>
                                 </p>
-
                                 <p class="mb-1" style="font-size: 9pt;">
                                     <strong>ንዑስ/ቁ Sub-TIN :</strong>
                                     N/A
@@ -130,7 +129,7 @@
                             <div class="col-6" style="padding: 6px;">
                                 <h6 style="font-weight: bold;">
                                     ለ / To
-                                    <t t-esc="doc.partner_id.name or 'N/A'"/>
+                                    <t t-esc="doc.eims_buyers_legal_name or doc.company_id.name or 'N/A'"/>
                                 </h6>
                                 <!--  Address Section  -->
                                 <p style="margin-bottom: 3px;">
@@ -140,41 +139,41 @@
                                     <div class="col-6">
                                         <p class="mb-1" style="font-size: 9pt;">
                                             <strong>ከተማ / City/Town :</strong>
-                                            N/A
+                                            <t t-esc="doc.eims_buyers_city_code or doc.company_id.city or 'N/A'"/>
                                         </p>
                                         <p class="mb-1" style="font-size: 9pt;">
                                             <strong>ወረዳ / Woreda :</strong>
-                                            N/A
+                                            <t t-esc="doc.eims_buyers_wereda or doc.company_id.eims_wereda or 'N/A'"/>
                                         </p>
                                     </div>
                                     <div class="col-6">
                                         <p class="mb-1" style="font-size: 9pt;">
                                             <strong>ዞን / ክ/ከተማ / Zone/Sub city :</strong>
-                                            N/A
+                                            <t t-esc="doc.eims_buyers_region or doc.company_id.eims_region or 'N/A'"/>
                                         </p>
                                         <p class="mb-1" style="font-size: 9pt;">
                                             <strong>ቀበሌ / Kebele :</strong>
-                                            N/A
+                                            <t t-esc="doc.eims_buyers_locality or doc.company_id.eims_locality or 'N/A'"/>
                                         </p>
                                     </div>
                                 </div>
                                 <p class="mb-1" style="font-size: 9pt;">
                                     <strong>የቤ/ቁ / H/No :</strong>
-                                    N/A
+                                    <t t-esc="doc.eims_buyers_house_number or doc.company_id.eims_house_number or 'N/A'"/>
                                 </p>
                                 <!--  Phone  -->
                                 <p class="mb-1">
                                     <strong>Phone:</strong>
-                                    <t t-esc="doc.partner_id.phone or 'N/A'"/>
+                                    <t t-esc="doc.eims_buyers_phone or doc.company_id.phone or 'N/A'"/>
                                 </p>
                                 <!--  VAT and Sub-TIN  -->
                                 <p class="mb-1" style="font-size: 9pt;">
-                                    <strong>የሻጭ ተ.እ.ታ ቁጥር / Seller's VAT Reg.No:</strong>
-                                    N/A
+                                    <strong>የገዥ ተ.እ.ታ ቁጥር / Customer's VAT Reg.No:</strong>
+                                    <t t-esc="doc.eims_buyers_vat_number or 'N/A'"/>
                                 </p>
                                 <p class="mb-1">
                                     <strong>የገዥ የግብር ከፋይ መለያ ቁጥር / Customer's TIN:</strong>
-                                    <t t-esc="'0088514835'"/>
+                                    <t t-esc="doc.eims_buyers_tin or 'N/A'"/>
                                 </p>
                                 <p class="mb-1" style="font-size: 9pt;">
                                     <strong>ንዑስ/ቁ Sub-TIN :</strong>
