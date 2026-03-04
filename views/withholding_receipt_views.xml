@@ -56,19 +56,37 @@
                         />
                     </header>
                     <group>
-                        <field name="invoice_irn"/>
-                        <button string="Verify IRN" type="object" name="action_verify_irn" class="btn-primary"/>
-                        <newline/>
-                        <field name="seller_tin" readonly="1"/>
-                        <field name="seller_name" readonly="1"/>
-                        <field name="buyer_tin" readonly="1"/>
+                        <group>
+                            <field name="invoice_irn"/>
+                            <button string="Verify IRN" type="object" name="action_verify_irn" class="btn-primary"/>
+                            <field name="rrn" readonly="1"/>
+                            <field name="status" readonly="1"/>
+                        </group>
+                        <group string="Amounts">
+                            <field name="pre_tax_amount"/>
+                            <field name="withholding_rate"/>
+                            <field name="withholding_amount"/>
+                            <button string="Submit Withholding" type="object" name="action_submit_withholding"
+                                    class="btn-success"/>
+                        </group>
                     </group>
                     <group>
-                        <field name="pre_tax_amount"/>
-                        <field name="withholding_rate"/>
-                        <field name="withholding_amount"/>
-                        <button string="Submit Withholding" type="object" name="action_submit_withholding"
-                                class="btn-success"/>
+                        <group string="Buyer Details">
+                            <field name="buyer_tin" readonly="1"/>
+                            <field name="eims_buyers_legal_name" readonly="1"/>
+                            <field name="eims_buyers_vat_number" readonly="1"/>
+                            <field name="eims_buyers_phone" readonly="1"/>
+                            <field name="eims_buyers_city_code" readonly="1"/>
+                            <field name="eims_buyers_wereda" readonly="1"/>
+                        </group>
+                        <group string="Seller Details">
+                            <field name="seller_tin" readonly="1"/>
+                            <field name="eims_seller_legal_name" readonly="1"/>
+                            <field name="eims_seller_vat_number" readonly="1"/>
+                            <field name="eims_seller_phone" readonly="1"/>
+                            <field name="eims_seller_city_code" readonly="1"/>
+                            <field name="eims_seller_wereda" readonly="1"/>
+                        </group>
                     </group>
                     <group>
                         <field name="qr_code"/>
