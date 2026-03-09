@@ -148,8 +148,7 @@
                                     <div class="col-6" style="border-right: 1px solid black;">
                                         <p class="mb-1">
                                             <strong>የሻጭ ተ.እ.ታ ቁጥር / Seller's VAT Reg.No:</strong>
-                                            <!--                                        <span t-field="doc.company_id.eims_vat_number or 'N/A'"/>-->
-
+                                            <span t-esc="doc.eims_seller_vat_number or 'N/A'"/>
                                         </p>
                                         <p class="mb-1">
                                             <strong>የሻጭ የግብር ከፋይ መለያ ቁጥር / Seller's TIN:</strong>
@@ -168,8 +167,12 @@
                                         </p>
                                         <p class="mb-1">
                                             <strong>የገዥ ተ.እ.ታ ቁጥር / Customer's VAT Reg. No:</strong>
+                                            <t t-esc="doc.eims_buyers_vat_number or doc.partner_id.eims_vat_number or 'N/A'"/>
                                         </p>
-                                        <!--                                        <t t-esc="doc.partner_id.eims_vat_number or 'N/A'"/>-->
+                                        <p class="mb-1">
+                                            <strong>ስልክ ቁጥር / Phone.No:</strong>
+                                            <span t-esc="doc.eims_buyers_phone or doc.partner_id.phone or 'N/A'"/>
+                                        </p>
                                         <p class="mb-1">
                                             <strong>ንዑስ/ቁ / Sub-TIN:</strong>
                                             <span t-esc="'N/A'"/>
