@@ -141,6 +141,10 @@ class AccountMove(models.Model):
         help='The original invoice this credit memo is linked to.'
     )
     last_credit_memo_response = fields.Text(string="Last Credit Memo Response")
+    eims_is_debit_note = fields.Boolean(
+        string="Is Debit Note", default=False,
+        help="Set to True when this invoice is a Debit Note (additional quantities/amounts to an existing invoice)"
+    )
 
     reversal_reason = fields.Char(string='Reversal Reason')
     credit_memo_date = fields.Datetime(string='Credit Memo Date')

@@ -20,12 +20,36 @@
                                         <p style="margin-bottom: 0;">N/A, 101</p>
                                     </div>
                                     <div class="col-4">
-                                        <h5 style="font-weight: bold; margin-bottom: 0;">
-                                            የእጅ በእጅ ሽያጭ ደረሰኝ / ተ.እ.ታ / ኤክሳይዝ ታክስ
-                                        </h5>
-                                        <h5 style="font-weight: bold; margin-top: 0;">
-                                            Cash Sales Invoice / VAT / Excise Tax
-                                        </h5>
+                                        <!-- Regular Invoice -->
+                                        <t t-if="doc.move_type != 'out_refund'">
+                                            <h5 style="font-weight: bold; margin-bottom: 0;">
+                                                የእጅ በእጅ ሽያጭ ደረሰኝ / ተ.እ.ታ / ኤክሳይዝ ታክስ
+                                            </h5>
+                                            <h5 style="font-weight: bold; margin-top: 0;">
+                                                Cash Sales Invoice / VAT / Excise Tax
+                                            </h5>
+                                        </t>
+                                        <!-- out_refund: Credit Note vs Debit Note based on Amount comparison -->
+                                        <t t-else="">
+                                            <t t-set="is_credit" t-value="doc.reversed_entry_id and doc.amount_total &lt;= doc.reversed_entry_id.amount_total"/>
+
+                                            <t t-if="is_credit">
+                                                <h5 style="font-weight: bold; margin-bottom: 0;">
+                                                    የክሬዲት ማስታወሻ ደረሰኝ / ተ.እ.ታ / ኤክሳይዝ ታክስ
+                                                </h5>
+                                                <h5 style="font-weight: bold; margin-top: 0;">
+                                                    Credit Note Invoice / VAT / Excise Tax
+                                                </h5>
+                                            </t>
+                                            <t t-else="">
+                                                <h5 style="font-weight: bold; margin-bottom: 0;">
+                                                    የዴቢት ማስታወሻ ደረሰኝ / ተ.እ.ታ / ኤክሳይዝ ታክስ
+                                                </h5>
+                                                <h5 style="font-weight: bold; margin-top: 0;">
+                                                    Debit Note Invoice / VAT / Excise Tax
+                                                </h5>
+                                            </t>
+                                        </t>
                                     </div>
                                     <div class="col-4 text-right">
                                         <p class="mb-0">የደረሰኝ ቁጥር / Document No:
